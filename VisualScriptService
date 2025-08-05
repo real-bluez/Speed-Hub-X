@@ -1,0 +1,151 @@
+-- Esperar al jugador y su PlayerGui
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+repeat wait() until player:FindFirstChild("PlayerGui")
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Eliminar GUI anterior si existe
+if playerGui:FindFirstChild("LoadingScreen") then
+	playerGui:FindFirstChild("LoadingScreen"):Destroy()
+end
+
+-- Función para detectar el ejecutor automáticamente
+local function detectExecutor()
+	local executor = "Unknown"
+
+	if identifyexecutor then
+		executor = identifyexecutor()
+	elseif syn then
+		executor = "Synapse X"
+	elseif is_sirhurt_closure then
+		executor = "SirHurt"
+	elseif isexecutorclosure then
+		executor = "Script-Ware"
+	elseif getexecutorname then
+		executor = getexecutorname()
+	elseif KRNL_LOADED then
+		executor = "KRNL"
+	elseif pebc_execute then
+		executor = "Fluxus"
+	elseif hookfunction and not islclosure then
+		executor = "Electron"
+	end
+
+	return executor
+end
+
+local executorName = detectExecutor()
+
+-- Crear GUI principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LoadingScreen"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Fondo negro
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Función para crear texto con fuente Bangers y borde negro
+local function createTextLabel(text, positionY, height)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0, height)
+	label.Position = UDim2.new(0, 0, 0, positionY)
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Bangers
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0
+	label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	label.Parent = background
+	return label
+end
+
+-- Título principal
+createTextLabel("Loading Script", 50, 60)
+
+-- Línea separadora
+local separator = Instance.new("Frame")
+separator.Size = UDim2.new(0.6, 0, 0, 4)
+separator.Position = UDim2.new(0.2, 0, 0, 115)
+separator.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+separator.BorderColor3 = Color3.fromRGB(0, 0, 0)
+separator.BorderSizePixel = 1
+separator.Parent = background
+
+-- Game detectado
+createTextLabel("Game Detected: Grow a Garden", 140, 40)
+
+-- Player detectado
+createTextLabel("Player Detected: " .. player.Name, 190, 40)
+
+-- Executor detectado
+createTextLabel("Executor: " .. executorName, 240, 30)
+
+-- Status debajo del executor
+createTextLabel("Status: Updated", 280, 30)
+
+-- Barra de carga
+local loadingBarBackground = Instance.new("Frame")
+loadingBarBackground.Size = UDim2.new(0.8, 0, 0, 30)
+loadingBarBackground.Position = UDim2.new(0.1, 0, 0, 340)
+loadingBarBackground.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+loadingBarBackground.BorderColor3 = Color3.fromRGB(0, 0, 0)
+loadingBarBackground.BorderSizePixel = 2
+loadingBarBackground.Parent = background
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(0, 15)
+bgCorner.Parent = loadingBarBackground
+
+local loadingBarFill = Instance.new("Frame")
+loadingBarFill.Size = UDim2.new(0, 0, 1, 0)
+loadingBarFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+loadingBarFill.BorderSizePixel = 0
+loadingBarFill.Parent = loadingBarBackground
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 15)
+fillCorner.Parent = loadingBarFill
+
+-- Texto de progreso
+local progressLabel = Instance.new("TextLabel")
+progressLabel.Size = UDim2.new(1, 0, 1, 0)
+progressLabel.Position = UDim2.new(0, 0, 0, 0)
+progressLabel.BackgroundTransparency = 1
+progressLabel.Text = "Loading... 0%"
+progressLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+progressLabel.TextStrokeTransparency = 0
+progressLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+progressLabel.Font = Enum.Font.Bangers
+progressLabel.TextScaled = true
+progressLabel.Parent = loadingBarBackground
+
+-- Explicación al fondo
+local explanation = createTextLabel("This script takes time to load because of recent Grow A Garden Ingame Anticheat Updates so you can use all features without being kicked, thank you for understanding", 400, 60)
+explanation.TextWrapped = true
+
+-- Lógica de carga (300s)
+local duration = 300
+local startTime = tick()
+
+local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+local goal = { Size = UDim2.new(1, 0, 1, 0) }
+local tween = TweenService:Create(loadingBarFill, tweenInfo, goal)
+tween:Play()
+
+-- Actualizar porcentaje real en pantalla
+RunService.RenderStepped:Connect(function()
+	local elapsed = tick() - startTime
+	local percent = math.clamp(elapsed / duration, 0, 1)
+	progressLabel.Text = string.format("Loading... %d%%", percent * 100)
+end)
